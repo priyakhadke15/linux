@@ -24,6 +24,11 @@
 #include "trace.h"
 #include "pmu.h"
 
+
+
+atomic_t counter;
+EXPORT_SYMBOL(counter);
+
 static u32 xstate_required_size(u64 xstate_bv, bool compacted)
 {
 	int feature_bit = 0;
@@ -1043,10 +1048,19 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 
 	if (cpuid_fault_enabled(vcpu) && !kvm_require_cpl(vcpu, 0))
 		return 1;
-
 	eax = kvm_rax_read(vcpu);
 	ecx = kvm_rcx_read(vcpu);
-	kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
+	if ( eax == 0x4FFFFFFF )
+	{
+		
+		eax = atomic_read(&counter);
+	}
+	else
+	{	
+	
+		kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
+	}
+
 	kvm_rax_write(vcpu, eax);
 	kvm_rbx_write(vcpu, ebx);
 	kvm_rcx_write(vcpu, ecx);
